@@ -34,3 +34,26 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Deploy on Netlify
+
+1. Push this repo to GitHub.
+2. Netlify → Add new site → Import from Git.
+3. Build settings:
+   - Base directory: `proposal-generator-app` (only if your repo root is the parent folder)
+   - Build command: `npm run build`
+   - Publish directory: leave empty (the Netlify Next plugin handles this)
+4. Add environment variables in Netlify:
+   - NEXT_PUBLIC_SUPABASE_URL
+   - NEXT_PUBLIC_SUPABASE_ANON_KEY
+   - SUPABASE_SERVICE_ROLE_KEY
+   - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+   - STRIPE_SECRET_KEY
+   - STRIPE_WEBHOOK_SECRET
+   - ANTHROPIC_API_KEY
+   - ANTHROPIC_MODEL
+   - NEXT_PUBLIC_APP_URL
+5. Deploy the site.
+6. Update external services:
+   - Supabase Auth Redirect URLs: `https://YOUR_SITE.netlify.app/auth/callback`
+   - Stripe Webhook endpoint: `https://YOUR_SITE.netlify.app/api/stripe/webhook`
