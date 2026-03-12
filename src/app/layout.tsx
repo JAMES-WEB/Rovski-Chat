@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Proposal Generator",
-  description: "AI-assisted proposal generation with signing and payments",
+  title: "HR App",
+  description: "HR handbook review and approvals",
 };
 
 export default function RootLayout({
