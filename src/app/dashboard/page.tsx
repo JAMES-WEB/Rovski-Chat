@@ -22,10 +22,7 @@ export default async function DashboardPage() {
       .select("status")
       .eq("user_id", user.id)
       .maybeSingle();
-    const approvalStatus =
-      requestRow?.status ??
-      (user.user_metadata as { approval_status?: string })?.approval_status ??
-      "pending";
+    const approvalStatus = requestRow?.status ?? "pending";
     if (approvalStatus !== "approved") {
       redirect(`/?status=${approvalStatus}`);
     }

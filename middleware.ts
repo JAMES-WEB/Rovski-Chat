@@ -89,10 +89,7 @@ export async function middleware(request: NextRequest) {
       .select('status')
       .eq('user_id', user.id)
       .maybeSingle()
-    const approvalStatus =
-      requestRow?.status ??
-      (user.user_metadata as { approval_status?: string })?.approval_status ??
-      'pending'
+    const approvalStatus = requestRow?.status ?? 'pending'
     if (approvalStatus !== 'approved') {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = '/'
