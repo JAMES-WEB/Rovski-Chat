@@ -17,19 +17,17 @@ export default async function DashboardPage() {
 
   const email = user.email?.toLowerCase() ?? "";
   if (!adminEmails.includes(email)) {
+    const { data: requestRow } = await supabase
+      .from("signup_requests")
+      .select("status")
+      .eq("user_id", user.id)
+      .maybeSingle();
     const approvalStatus =
+      requestRow?.status ??
       (user.user_metadata as { approval_status?: string })?.approval_status ??
-      "";
+      "pending";
     if (approvalStatus !== "approved") {
-      const { data: requestRow } = await supabase
-        .from("signup_requests")
-        .select("status")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (!requestRow || requestRow.status !== "approved") {
-        const status = requestRow?.status ?? approvalStatus ?? "pending";
-        redirect(`/sign-in?status=${status}`);
-      }
+      redirect(`/sign-in?status=${approvalStatus}`);
     }
   }
 

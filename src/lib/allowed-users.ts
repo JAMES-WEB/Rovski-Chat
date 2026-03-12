@@ -1,4 +1,3 @@
-export const adminEmails = [
-  "jiaqi@rovski.com.my",
-  "jamesleejiaqi98@gmail.com"
-].map((email) => email.toLowerCase());
+export const adminEmails = ["jamesleejiaqi98@gmail.com"].map((email) =>
+  email.toLowerCase()
+);
