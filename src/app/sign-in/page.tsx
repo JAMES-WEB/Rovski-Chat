@@ -1,12 +1,26 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { createSupabaseClient } from "@/lib/supabase/client";
+import { adminEmails } from "@/lib/allowed-users";
 
 export default function SignInPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const status = searchParams.get("status");
+    const requested = searchParams.get("requested");
+    if (status === "denied") {
+      setError("Your access request was denied.");
+    } else if (status === "pending") {
+      setError("Your account is pending approval.");
+    } else if (requested) {
+      setError("Request submitted. Wait for admin approval.");
+    }
+  }, [searchParams]);
 
   async function signIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -19,12 +33,37 @@ export default function SignInPage() {
       return;
     }
     const supabase = createSupabaseClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data: authData, error: authError } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
     if (authError) {
       setError(authError.message);
+      return;
+    }
+    const userId = authData.user?.id;
+    if (!userId) {
+      setError("Unable to validate account.");
+      return;
+    }
+    const normalizedEmail = authData.user?.email?.toLowerCase() ?? "";
+    if (adminEmails.includes(normalizedEmail)) {
+      router.push("/dashboard");
+      return;
+    }
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("status")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!profile || profile.status !== "approved") {
+      await supabase.auth.signOut();
+      const message =
+        profile?.status === "denied"
+          ? "Your access request was denied."
+          : "Your account is pending approval.";
+      setError(message);
       return;
     }
     router.push("/dashboard");

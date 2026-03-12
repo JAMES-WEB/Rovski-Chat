@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { createSupabaseClient } from "@/lib/supabase/client";
+import { adminEmails } from "@/lib/allowed-users";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -15,7 +16,25 @@ export default function DashboardPage() {
         router.replace("/sign-in");
         return;
       }
-      setIsReady(true);
+      const normalizedEmail = data.session.user.email?.toLowerCase() ?? "";
+      if (adminEmails.includes(normalizedEmail)) {
+        setIsReady(true);
+        return;
+      }
+      supabase
+        .from("profiles")
+        .select("status")
+        .eq("id", data.session.user.id)
+        .maybeSingle()
+        .then(async ({ data: profile }) => {
+          if (!profile || profile.status !== "approved") {
+            await supabase.auth.signOut();
+            const status = profile?.status ?? "pending";
+            router.replace(`/sign-in?status=${status}`);
+            return;
+          }
+          setIsReady(true);
+        });
     });
   }, [router]);
 

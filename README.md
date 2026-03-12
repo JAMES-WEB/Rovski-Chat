@@ -57,3 +57,35 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 6. Update external services:
    - Supabase Auth Redirect URLs: `https://YOUR_SITE.netlify.app/auth/callback`
    - Stripe Webhook endpoint: `https://YOUR_SITE.netlify.app/api/stripe/webhook`
+
+## Approved Signup Flow
+
+1. Create the `signup_requests` table in Supabase:
+
+```
+create table if not exists signup_requests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null unique,
+  email text not null,
+  status text not null default 'pending' check (status in ('pending','approved','denied')),
+  approved_at timestamptz,
+  denied_at timestamptz,
+  reviewed_at timestamptz,
+  reviewed_by uuid references auth.users(id),
+  created_at timestamptz default now()
+);
+
+alter table signup_requests enable row level security;
+create policy "Users can view their signup request"
+  on signup_requests for select
+  using (auth.uid() = user_id);
+```
+
+2. Configure SMTP environment variables:
+   - SMTP_HOST
+   - SMTP_PORT
+   - SMTP_USER
+   - SMTP_PASS
+   - SMTP_FROM
+
+3. Update `src/lib/allowed-users.ts` to the admin emails who can approve requests.

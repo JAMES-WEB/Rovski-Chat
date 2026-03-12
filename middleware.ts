@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { adminEmails } from './src/lib/allowed-users'
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -7,6 +8,15 @@ export async function middleware(request: NextRequest) {
       headers: request.headers,
     },
   })
+
+  const pathname = request.nextUrl.pathname
+  const isProtected =
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/proposals/new') ||
+    pathname.startsWith('/api/proposals')
+  const isAdminRoute =
+    pathname.startsWith('/admin') || pathname.startsWith('/api/admin')
+  const needsApproval = isProtected || isAdminRoute
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -54,7 +64,42 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user && needsApproval) {
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = '/sign-in'
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  if (user && isAdminRoute) {
+    const email = user.email?.toLowerCase() ?? ''
+    if (!adminEmails.includes(email)) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/sign-in'
+      return NextResponse.redirect(redirectUrl)
+    }
+  }
+
+  if (user && needsApproval) {
+    const email = user.email?.toLowerCase() ?? ''
+    if (adminEmails.includes(email)) {
+      return response
+    }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('status')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (!profile || profile.status !== 'approved') {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/sign-in'
+      redirectUrl.searchParams.set('status', profile?.status ?? 'pending')
+      return NextResponse.redirect(redirectUrl)
+    }
+  }
 
   return response
 }

@@ -2,15 +2,16 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createSupabaseClient } from "@/lib/supabase/client";
 
 export default function SignUpPage() {
   const router = useRouter();
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   async function signUp(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setMessage("");
     const formData = new FormData(event.currentTarget);
     const email = String(formData.get("email") ?? "").trim();
     const password = String(formData.get("password") ?? "").trim();
@@ -18,22 +19,42 @@ export default function SignUpPage() {
       setError("Email and password are required.");
       return;
     }
-    const supabase = createSupabaseClient();
-    const { data, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-    if (authError) {
-      setError(authError.message);
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
       return;
     }
-    if (data.session?.user) {
-      await supabase.from("profiles").upsert({
-        id: data.session.user.id,
-        email,
+    try {
+      const response = await fetch("/api/auth/request-signup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
+      const raw = await response.text();
+      let data: { message?: string; error?: string } = {};
+      try {
+        data = raw
+          ? (JSON.parse(raw) as { message?: string; error?: string })
+          : {};
+      } catch {
+        data = {};
+      }
+      if (!response.ok) {
+        setError(
+          data.error ??
+            raw ??
+            `Failed to submit request (HTTP ${response.status}).`
+        );
+        return;
+      }
+      setMessage(data.message ?? "Request submitted.");
+      router.push("/sign-in?requested=1");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to reach the server."
+      );
     }
-    router.push("/sign-in");
   }
 
   return (
@@ -77,7 +98,7 @@ export default function SignUpPage() {
               </p>
               <h1 className="text-3xl font-semibold">Create an account</h1>
               <p className="text-sm text-zinc-300">
-                Enter your email and password to create an account.
+                Create your account. Access is granted after admin approval.
               </p>
             </div>
             <form onSubmit={signUp} className="space-y-5">
@@ -91,10 +112,14 @@ export default function SignUpPage() {
               <input
                 type="password"
                 name="password"
-                placeholder="Your password"
+                placeholder="Create a password"
+                minLength={6}
                 className="w-full rounded-2xl border border-emerald-400/20 bg-zinc-950/40 px-4 py-3 text-sm text-zinc-100 outline-none focus:border-emerald-300"
                 required
               />
+              <div className="rounded-2xl border border-emerald-400/20 bg-zinc-950/40 px-4 py-3 text-xs text-zinc-300">
+                Your password is secured now. You can sign in once approved.
+              </div>
               <button
                 type="submit"
                 className="w-full rounded-2xl bg-emerald-400 px-4 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-300"
@@ -105,6 +130,11 @@ export default function SignUpPage() {
             {error ? (
               <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-200">
                 {error}
+              </div>
+            ) : null}
+            {message ? (
+              <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-xs text-emerald-100">
+                {message}
               </div>
             ) : null}
           </div>
