@@ -21,15 +21,22 @@ export default function DashboardPage() {
         setIsReady(true);
         return;
       }
+      const approvalStatus =
+        (data.session.user.user_metadata as { approval_status?: string })
+          ?.approval_status ?? "";
+      if (approvalStatus === "approved") {
+        setIsReady(true);
+        return;
+      }
       supabase
-        .from("profiles")
+        .from("signup_requests")
         .select("status")
-        .eq("id", data.session.user.id)
+        .eq("user_id", data.session.user.id)
         .maybeSingle()
-        .then(async ({ data: profile }) => {
-          if (!profile || profile.status !== "approved") {
+        .then(async ({ data: requestRow }) => {
+          if (!requestRow || requestRow.status !== "approved") {
             await supabase.auth.signOut();
-            const status = profile?.status ?? "pending";
+            const status = requestRow?.status ?? "pending";
             router.replace(`/sign-in?status=${status}`);
             return;
           }
