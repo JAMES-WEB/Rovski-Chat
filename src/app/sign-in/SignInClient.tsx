@@ -53,25 +53,24 @@ export default function SignInClient() {
       router.push("/dashboard");
       return;
     }
+    const { data: requestRow } = await supabase
+      .from("signup_requests")
+      .select("status")
+      .eq("user_id", userId)
+      .maybeSingle();
     const approvalStatus =
+      requestRow?.status ??
       (authData.user?.user_metadata as { approval_status?: string })
-        ?.approval_status ?? "";
+        ?.approval_status ??
+      "pending";
     if (approvalStatus !== "approved") {
-      const { data: requestRow } = await supabase
-        .from("signup_requests")
-        .select("status")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (!requestRow || requestRow.status !== "approved") {
-        await supabase.auth.signOut();
-        const status = requestRow?.status ?? approvalStatus ?? "pending";
-        const message =
-          status === "denied"
-            ? "Your access request was denied."
-            : "Your account is pending approval.";
-        setError(message);
-        return;
-      }
+      await supabase.auth.signOut();
+      const message =
+        approvalStatus === "denied"
+          ? "Your account has been denied."
+          : "Your account is pending approval.";
+      setError(message);
+      return;
     }
     router.push("/dashboard");
   }
