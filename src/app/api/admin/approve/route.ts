@@ -87,12 +87,12 @@ export async function POST(request: Request) {
       await supabase
         .from("signup_requests")
         .update({ user_id: userId })
-        .eq("id", id);
+        .eq("id", resolvedId);
     }
   }
 
   const updates =
-    decision === "approved"
+    resolvedDecision === "approved"
       ? {
           status: "approved",
           approved_at: now,
@@ -116,14 +116,14 @@ export async function POST(request: Request) {
 
   if (userId) {
     await supabase.auth.admin.updateUserById(userId, {
-      user_metadata: { approval_status: decision },
+      user_metadata: { approval_status: resolvedDecision },
     });
   }
 
   try {
     const { transporter, from } = createMailer();
     const appUrl = getEnv("NEXT_PUBLIC_APP_URL");
-    if (decision === "approved") {
+    if (resolvedDecision === "approved") {
       const subject = "Your account is approved";
       const text = `Your account is approved. You can sign in now at ${appUrl}/sign-in.`;
       const html = `<p>Your account is approved.</p><p><a href="${appUrl}/sign-in">Sign in</a></p>`;
