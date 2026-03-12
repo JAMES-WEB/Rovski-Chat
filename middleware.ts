@@ -74,29 +74,26 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  if (user && isAdminRoute) {
+  if (user && needsApproval) {
     const email = user.email?.toLowerCase() ?? ''
-    if (!adminEmails.includes(email)) {
+    if (isAdminRoute && !adminEmails.includes(email)) {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = '/sign-in'
       return NextResponse.redirect(redirectUrl)
     }
-  }
-
-  if (user && needsApproval) {
-    const email = user.email?.toLowerCase() ?? ''
-    if (adminEmails.includes(email)) {
-      return response
-    }
-    const { data: profile } = await supabase
-      .from('profiles')
+    const { data: requestRow } = await supabase
+      .from('signup_requests')
       .select('status')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .maybeSingle()
-    if (!profile || profile.status !== 'approved') {
+    const approvalStatus =
+      requestRow?.status ??
+      (user.user_metadata as { approval_status?: string })?.approval_status ??
+      'pending'
+    if (approvalStatus !== 'approved') {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = '/sign-in'
-      redirectUrl.searchParams.set('status', profile?.status ?? 'pending')
+      redirectUrl.searchParams.set('status', approvalStatus)
       return NextResponse.redirect(redirectUrl)
     }
   }
