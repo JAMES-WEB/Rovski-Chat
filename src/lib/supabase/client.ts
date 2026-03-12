@@ -48,11 +48,18 @@ export function createSupabaseClient() {
         return getCookieValue(name);
       },
       set(name, value, options) {
+        const rawSameSite = options?.sameSite;
+        const sameSite =
+          typeof rawSameSite === "boolean"
+            ? rawSameSite
+              ? "strict"
+              : undefined
+            : rawSameSite;
         setCookieValue(name, value, {
           maxAge: options?.maxAge,
           expires: options?.expires,
           path: options?.path,
-          sameSite: options?.sameSite,
+          sameSite,
           secure: options?.secure,
         });
       },
