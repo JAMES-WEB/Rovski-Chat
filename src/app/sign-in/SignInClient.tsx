@@ -53,33 +53,7 @@ export default function SignInClient() {
       router.push("/dashboard");
       return;
     }
-    try {
-      const response = await fetch("/api/auth/whoami");
-      if (!response.ok) {
-        throw new Error("Unable to verify approval status.");
-      }
-      const data = (await response.json()) as {
-        isAdmin?: boolean;
-        approvalStatus?: string | null;
-      };
-      if (data.isAdmin || data.approvalStatus === "approved") {
-        router.push("/dashboard");
-        return;
-      }
-      await supabase.auth.signOut();
-      const message =
-        data.approvalStatus === "denied"
-          ? "Your account has been denied."
-          : "Your account is pending approval.";
-      setError(message);
-    } catch (err) {
-      await supabase.auth.signOut();
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to verify approval status."
-      );
-    }
+    router.push("/dashboard");
   }
 
   return (
