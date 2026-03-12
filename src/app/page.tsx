@@ -1,11 +1,13 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { createSupabaseClient } from "@/lib/supabase/client";
 
-export default function Home() {
-  const searchParams = useSearchParams();
+export default function Home({
+  searchParams,
+}: {
+  searchParams?: { status?: string };
+}) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
 
@@ -17,7 +19,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const status = searchParams.get("status");
+    const status = searchParams?.status ?? "";
     if (status === "pending") {
       setStatusMessage("Pending approval.");
     } else if (status === "denied") {
@@ -25,7 +27,7 @@ export default function Home() {
     } else {
       setStatusMessage("");
     }
-  }, [searchParams]);
+  }, [searchParams?.status]);
 
   return (
     <div className="relative min-h-screen bg-zinc-950 text-zinc-50">
