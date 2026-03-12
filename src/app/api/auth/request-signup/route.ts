@@ -119,6 +119,7 @@ export async function POST(request: Request) {
       );
     }
 
+    let emailError: string | null = null;
     try {
       const appUrl = getEnv("NEXT_PUBLIC_APP_URL");
       const adminLink = `${appUrl}/admin/approvals`;
@@ -133,10 +134,15 @@ export async function POST(request: Request) {
         text,
         html,
       });
-    } catch {}
+    } catch (mailError) {
+      emailError =
+        mailError instanceof Error ? mailError.message : "Email failed.";
+      console.error("request-signup email failed:", mailError);
+    }
 
     return NextResponse.json({
       message: "Request submitted. Admin approval required.",
+      emailError,
     });
   } catch (error) {
     const err = error as Error & { cause?: unknown; name?: string };

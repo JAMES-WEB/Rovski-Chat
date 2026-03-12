@@ -46,7 +46,15 @@ export default function SignUpPage() {
         );
         return;
       }
-      setMessage(data.message ?? "Request submitted.");
+      if ((data as { emailError?: string }).emailError) {
+        setMessage(
+          `Request submitted. Email failed: ${
+            (data as { emailError?: string }).emailError
+          }`
+        );
+      } else {
+        setMessage(data.message ?? "Request submitted.");
+      }
       router.push("/sign-in?requested=1");
     } catch (err) {
       setError(

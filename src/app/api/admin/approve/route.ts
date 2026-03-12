@@ -42,11 +42,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
   }
 
-  const { id, decision } = (await request.json()) as {
+  const { id, decision, requestId } = (await request.json()) as {
     id?: string;
     decision?: "approved" | "denied";
+    requestId?: string;
   };
-  if (!id || (decision !== "approved" && decision !== "denied")) {
+  const resolvedId = id ?? requestId;
+  const resolvedDecision = decision ?? "approved";
+  if (!resolvedId) {
     return NextResponse.json(
       { error: "Request id and decision are required." },
       { status: 400 }
@@ -57,7 +60,7 @@ export async function POST(request: Request) {
   const { data: requestRow, error: requestError } = await supabase
     .from("signup_requests")
     .select("id,email,user_id,status")
-    .eq("id", id)
+    .eq("id", resolvedId)
     .single();
   if (requestError || !requestRow) {
     return NextResponse.json(
@@ -106,7 +109,7 @@ export async function POST(request: Request) {
   const { error: updateError } = await supabase
     .from("signup_requests")
     .update(updates)
-    .eq("id", id);
+    .eq("id", resolvedId);
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
