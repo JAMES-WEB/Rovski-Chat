@@ -13,18 +13,7 @@ export default async function ApprovalsPage() {
   if (!user || !adminEmails.includes(email)) {
     redirect("/sign-in");
   }
-  const { data: requestRow } = await supabase
-    .from("signup_requests")
-    .select("status")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  const approvalStatus =
-    requestRow?.status ??
-    (user.user_metadata as { approval_status?: string })?.approval_status ??
-    "pending";
-  if (approvalStatus !== "approved") {
-    redirect(`/sign-in?status=${approvalStatus}`);
-  }
+  // Admins can access approvals regardless of their own approval status.
 
   return (
     <div className="relative min-h-screen bg-zinc-950 text-zinc-50">

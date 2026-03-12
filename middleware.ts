@@ -76,6 +76,9 @@ export async function middleware(request: NextRequest) {
 
   if (user && needsApproval) {
     const email = user.email?.toLowerCase() ?? ''
+    if (adminEmails.includes(email)) {
+      return response
+    }
     if (isAdminRoute && !adminEmails.includes(email)) {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = '/sign-in'
