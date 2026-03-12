@@ -4,6 +4,8 @@ import AdminApprovalsClient from "@/components/AdminApprovalsClient";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { adminEmails } from "@/lib/allowed-users";
 
+export const dynamic = "force-dynamic";
+
 export default async function ApprovalsPage() {
   const supabase = await createSupabaseServerClient();
   const {
