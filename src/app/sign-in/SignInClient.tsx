@@ -12,13 +12,8 @@ export default function SignInClient() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const status = searchParams.get("status");
     const requested = searchParams.get("requested");
-    if (status === "denied") {
-      setError("Your access request was denied.");
-    } else if (status === "pending") {
-      setError("Your account is pending approval.");
-    } else if (requested) {
+    if (requested) {
       setError("Request submitted. Wait for admin approval.");
     }
   }, [searchParams]);

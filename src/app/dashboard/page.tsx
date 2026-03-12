@@ -27,7 +27,7 @@ export default async function DashboardPage() {
       (user.user_metadata as { approval_status?: string })?.approval_status ??
       "pending";
     if (approvalStatus !== "approved") {
-      redirect(`/sign-in?status=${approvalStatus}`);
+      redirect(`/?status=${approvalStatus}`);
     }
   }
 

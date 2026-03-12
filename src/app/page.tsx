@@ -1,10 +1,13 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createSupabaseClient } from "@/lib/supabase/client";
 
 export default function Home() {
+  const searchParams = useSearchParams();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
 
   useEffect(() => {
     const supabase = createSupabaseClient();
@@ -12,6 +15,17 @@ export default function Home() {
       setIsLoggedIn(!!data.session);
     });
   }, []);
+
+  useEffect(() => {
+    const status = searchParams.get("status");
+    if (status === "pending") {
+      setStatusMessage("Pending approval.");
+    } else if (status === "denied") {
+      setStatusMessage("Access is denied.");
+    } else {
+      setStatusMessage("");
+    }
+  }, [searchParams]);
 
   return (
     <div className="relative min-h-screen bg-zinc-950 text-zinc-50">
@@ -63,6 +77,11 @@ export default function Home() {
             )}
           </div>
         </header>
+        {statusMessage ? (
+          <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-xs text-amber-100">
+            {statusMessage}
+          </div>
+        ) : null}
         <main className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-8">
             <h1 className="text-4xl font-semibold leading-tight md:text-6xl">

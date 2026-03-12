@@ -11,7 +11,7 @@ export default async function ApprovalsPage() {
   } = await supabase.auth.getUser();
   const email = user?.email?.toLowerCase() ?? "";
   if (!user || !adminEmails.includes(email)) {
-    redirect("/sign-in");
+    redirect("/");
   }
   // Admins can access approvals regardless of their own approval status.
 

@@ -81,7 +81,7 @@ export async function middleware(request: NextRequest) {
     }
     if (isAdminRoute && !adminEmails.includes(email)) {
       const redirectUrl = request.nextUrl.clone()
-      redirectUrl.pathname = '/sign-in'
+      redirectUrl.pathname = '/'
       return NextResponse.redirect(redirectUrl)
     }
     const { data: requestRow } = await supabase
@@ -95,7 +95,7 @@ export async function middleware(request: NextRequest) {
       'pending'
     if (approvalStatus !== 'approved') {
       const redirectUrl = request.nextUrl.clone()
-      redirectUrl.pathname = '/sign-in'
+      redirectUrl.pathname = '/'
       redirectUrl.searchParams.set('status', approvalStatus)
       return NextResponse.redirect(redirectUrl)
     }
